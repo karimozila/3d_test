@@ -1,0 +1,191 @@
+import os
+import sys
+from maya import OpenMayaUI as omui
+from PySide2 import QtCore, QtWidgets, QtGui
+from PySide2.QtCore import QFile
+from shiboken2 import wrapInstance 
+
+def maya_main_window():
+    '''
+    Return the Maya main window widget as a Python object
+    '''
+    main_window_ptr = omui.MQtUtil.mainWindow()
+    return wrapInstance(long(main_window_ptr), QtWidgets.QWidget)
+
+class MyWidget(QtWidgets.QDialog):
+    def __init__(self, parent=maya_main_window()):
+        super(MyWidget, self).__init__(parent)
+        self.qtSignal = QtCore.Signal()
+        #################################################################
+    def create(self):
+        self.setWindowTitle("Batch Operation Tool")
+        self.setWindowFlags(QtCore.Qt.Tool)
+        self.resize(800, 400) # re-size the window
+
+
+
+        # type_layout
+        self.browse_layout = QtWidgets.QVBoxLayout()
+        # type elemnts
+        self.folder_radio = QtWidgets.QRadioButton("Folder")
+        self.file_radio = QtWidgets.QRadioButton("File")
+        self.file_radio.setChecked(True)
+
+        self.browse_button = QtWidgets.QPushButton("Browse")
+
+        # H layout
+        self.type_layout = QtWidgets.QHBoxLayout()
+        self.type_layout.addWidget(self.folder_radio)
+        self.type_layout.addWidget(self.file_radio)
+
+
+        self.browse_layout.addLayout(self.type_layout)
+        self.browse_layout.addWidget(self.browse_button)
+
+
+
+        #filter layout
+        self.filter_layout = QtWidgets.QVBoxLayout()
+
+        self.filter_label = QtWidgets.QLabel('Filter By Extinsions')
+        self.filter_text = QtWidgets.QPlainTextEdit()
+        self.filter_text.setMaximumHeight(25)
+
+        self.filter_layout.addWidget(self.filter_label)
+        self.filter_layout.addWidget(self.filter_text)
+
+
+        #files list
+        self.files_List = QtWidgets.QListWidget(self)
+        self.files_List.resize(300, 300)
+
+        #count layout
+        self.count_layout = QtWidgets.QHBoxLayout()
+
+        self.countText_label = QtWidgets.QLabel('count :')
+        self.count_label = QtWidgets.QLabel('0')
+        
+        self.count_layout.addWidget(self.countText_label)
+        self.count_layout.addWidget(self.count_label)
+
+        # batch button
+        self.batch_button = QtWidgets.QPushButton("Batch")
+
+        # operation tab layout
+        self.operation_tab_layout = QtWidgets.QVBoxLayout()
+        self.operation_tab_widget = QtWidgets.QWidget()
+        self.operation_tab_widget.setLayout(self.operation_tab_layout)
+
+        # batch tab layout
+        self.batch_tab_layout = QtWidgets.QVBoxLayout()
+        self.batch_tab_layout.addLayout(self.browse_layout)
+        self.batch_tab_layout.addLayout(self.filter_layout)
+        self.batch_tab_layout.addWidget(self.files_List)
+        self.batch_tab_layout.addLayout(self.count_layout)
+        self.batch_tab_layout.addWidget(self.batch_button)
+        self.batch_tab_widget = QtWidgets.QWidget()
+        self.batch_tab_widget.setLayout(self.batch_tab_layout)
+
+
+        self.tab = QtWidgets.QTabWidget()
+        # button = QPushButton("Tab One!")
+        # textEdit = QTextEdit()
+        # textEdit.setPlaceholderText("Tab Two!!")
+
+        self.tab.addTab(self.operation_tab_widget, "Operations")
+        self.tab.addTab(self.batch_tab_widget, "Batch")
+        # self.tab.addTab(self.operation_tab_layout, "Tab Two")
+
+        #signals
+        self.browse_button.clicked.connect(self.browse)
+        self.filter_text.textChanged.connect(self.filtering_list)
+        self.batch_button.clicked.connect(self.run)
+        
+        # fianlize layout
+        self.layout = QtWidgets.QVBoxLayout()
+        self.layout.addWidget(self.tab)
+        self.setLayout(self.layout)
+
+
+    def run(self):
+        for x in range(self.files_List.count()):
+            if not self.files_List.item(x).isHidden():
+                self.batch_op(self.files_List.item(x).text())
+    
+    def batch_op(self,item):
+        print item
+
+    def filtering_list(self):
+        extinsions = self.filter_text.toPlainText().split()
+        if extinsions :
+            for x in range(self.files_List.count()):
+                item_ext = self.files_List.item(x).text().split('.')[-1]
+                if item_ext in extinsions:
+                    self.files_List.setItemHidden(self.files_List.item(x) , False)
+                else :
+                    self.files_List.setItemHidden(self.files_List.item(x) , True)
+
+    def update_count(self):
+        count = self.files_List.count()
+        self.count_label.setText(str(count))
+
+    def browse(self):
+        if self.folder_radio.isChecked():
+            self.folder_dialogue()
+        elif self.file_radio.isChecked():
+            self.file_dialogue()
+        self.update_count()
+
+
+    def folder_dialogue(self):
+        dialog = QtWidgets.QFileDialog(self)
+        dialog.setFileMode(QtWidgets.QFileDialog.FileMode.Directory)
+        path = QtWidgets.QFileDialog.getExistingDirectory()
+        inFiles = self.getListOfFiles(path)
+        for i in inFiles:
+            self.files_List.addItem(i)
+        return inFiles
+
+    def getListOfFiles(self,dirName):
+        # create a list of file and sub directories 
+        # names in the given directory 
+        listOfFile = os.listdir(dirName)
+        allFiles = list()
+        # Iterate over all the entries
+        for entry in listOfFile:
+            # Create full path
+            fullPath = os.path.join(dirName, entry)
+            # If entry is a directory then get the list of files in this directory 
+            if os.path.isdir(fullPath):
+                allFiles = allFiles + self.getListOfFiles(fullPath)
+            else:
+                allFiles.append(fullPath)
+        return allFiles
+                
+    def file_dialogue(self):
+        fileWin = QtWidgets.QFileDialog(self)
+        fileWin.setFileMode(QtWidgets.QFileDialog.ExistingFiles)
+        
+        if fileWin.exec_():
+            inFiles = fileWin.selectedFiles()
+        else:
+            inFiles = []
+
+        fileWin.setParent(None)
+        for i in inFiles:
+            self.files_List.addItem(i)
+        return inFiles
+    
+        
+if __name__ == "__main__":
+    try:
+        ui.deleteLater()
+    except:
+        pass
+    ui = MyWidget()
+    
+    try:
+        ui.create()
+        ui.show()
+    except:
+        ui.deleteLater()
