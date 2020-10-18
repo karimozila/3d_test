@@ -1,0 +1,49 @@
+import maya.cmds as mc
+import pprint
+import json
+def export_node_data(node , file):
+    # get data
+    data = get_node_attr_data(node)
+    # write json file
+    sorted_data = (json.dumps(data, indent=4, sort_keys=True))
+    with open(file , 'w') as ff:
+        ff.write(sorted_data)
+
+def import_node_data(file):
+    # read json file
+    with open(file , 'r') as ff:
+        imported_data = ff.read()
+        imported_data = json.loads(imported_data)
+        # imported_data = json.load(ff)
+    return imported_data
+
+def get_node_attr_data(node):
+    attrs = mc.listAttr(node,k=1)
+    node_dict={}
+    attr_dict={}
+    for attr in attrs:
+        mc.setKeyframe(node , at=attr , v=mc.getAttr('%s.%s'%(node , attr)))
+        keyframes =  mc.keyframe(node,q=1,at=attr)
+        if not keyframes : mc.setKeyframe(node , at=attr , v=mc.getAttr('%s.%s'%(node , attr)))
+        data_dict ={}
+        for keyframe in keyframes :
+            value = mc.keyframe(node,q=1,at=attr,ev=1,t=(keyframe,keyframe))[0]
+            data_dict[keyframe] = value
+        attr_dict[str(attr)] = data_dict
+    node_dict[node] = attr_dict
+    return node_dict
+
+def set_imported_data(node , file):
+    data =  import_node_data( file )
+    attrs = [value for value in data.values()[0].keys()]
+    keyframes = [value.keys() for value in data.values()[0].values()]
+    values = [value.values() for value in data.values()[0].values()]
+    for i in range(len(attrs)):
+        for k in range(len(keyframes[i])):
+            mc.setKeyframe( node , at=attrs[i] , t = [keyframes[i][k],keyframes[i][k]]  , v = values[i][k] )
+
+# examples
+node = 'lightGRP01_Driver'
+file = '/Users/karimbehiry/Documents/text.json'
+export_node_data(node , file)
+set_imported_data(node , file)
