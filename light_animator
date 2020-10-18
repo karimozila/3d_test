@@ -1,0 +1,63 @@
+import maya.cmds as mc
+# think about animation not technicalites
+'''
+make rig which is connected to group node
+and unplug and replug capable
+set key commands
+time commands
+randomizer commands ( think about factors and attributes)
+save light rigs connected in null node to can close maya file and redit it
+save preset with keyed animation of attributes
+menu export . import presets
+open lights groups slider menu connect update
+create button .. when select light nodes
+open new window with names of selection and place to name it and button for update selection
+
+think about how user dealing with keyed frames to edit .. for visualize to rekey it
+anim : noise .. spin .. overlap to achieve circular movment .. 
+
+key all button which set keyframe for all of this attr in hook grp
+
+edit mode to unplug rig and reedit light situation then realighn rig start point to new situation with the same animation attributes
+
+spin = rotate in z but in one way
+loop rotate from 0 to 180
+speed multiplayer with time and all anim effects
+overlap x value with y value to create circular motion assuming the same speed
+
+when import preset retime the start and end on all animation to the new scene timeslider range with acceptance of user
+absloute or relative
+
+geting keyframe with attributes
+
+create double node one for real connections and another for ui and replacment from import 
+
+DISABLE AUTO KEY AND GET VALUE WHEN REALES THE PLAYBACK
+
+thinnk of key frame the last frame in the range before export 
+
+when create 
+create hook grp with name of light grp
+for each light in slection_ls:
+    run rig
+'''
+axis = ['x','y','z']
+individual_attributes = ['loop rotate' , 'speed']
+global_attributes = ['spin' , 'overlap']
+
+for axis in axis:
+    for indv_attr in individual_attributes:
+
+for glob_attr in global_attributes:
+
+mc.group(name = 'light_01_node',em=True ,w=1)
+def lock_hide_Attr(attr):
+    if attr == 'all':
+
+def rig(item):
+    crt_light_rig_hierarchy()
+    crt_light_rig_clyinderProxy()
+    crt_light_rig_gimbal()
+    
+# definations for get all nodes and insert data into the ui
+# defination for create nodes with data extracted from  imported json file 
