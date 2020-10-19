@@ -61,3 +61,17 @@ def rig(item):
     
 # definations for get all nodes and insert data into the ui
 # defination for create nodes with data extracted from  imported json file 
+
+
+# add new notes
+'''
+i think the best way is
+
+$value=($inputcontrol%3.14159);
+$value=-1.0*cos ($inputcontrol%3.14159);
+$value=((1.0*cos ($inputcontrol%3.14159))+1)/2.0;
+
+this way when inputcontrol=0 the blend shape is 0
+and the range value is between 0 and 1
+
+output.scaleY = (sin(frame*kgfhjfhj.speed/20)+1)*0.5*kgfhjfhj.offsetValue+kgfhjfhj.rotateAngle
