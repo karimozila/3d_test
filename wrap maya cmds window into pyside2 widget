@@ -1,0 +1,57 @@
+# some code from the web to wrap maya created window into pyside2 widget which is awesome to get benifit from maya cmds window featcure like connect attr directly
+#        self.layout.addWidget(qtTable)
+
+import maya.cmds as cmds
+
+def edit_cell(row, column, value):
+    return 1
+
+window = cmds.window(widthHeight=(400, 300))
+form = cmds.formLayout()
+table = cmds.scriptTable(rows=4, columns=2, label=[(1,"Column 1"), (2,"Column 2")], cellChangedCmd=edit_cell)
+
+addButton = cmds.button(label="Add Row",command="cmds.scriptTable(table, edit=True,insertRow=1)")
+deleteButton = cmds.button(label="Delete Row",command="cmds.scriptTable(table, edit=True,deleteRow=1)")
+
+cmds.formLayout(form, edit=True, attachForm=[(table, 'top', 0), (table, 'left', 0), (table, 'right', 0), (addButton, 'left', 0), (addButton, 'bottom', 0), (deleteButton, 'bottom', 0), (deleteButton, 'right', 0)], attachControl=(table, 'bottom', 0, addButton), attachNone=[(addButton, 'top'),(deleteButton, 'top')],  attachPosition=[(addButton, 'right', 0, 50), (deleteButton, 'left', 0, 50)] )
+
+cmds.showWindow( window )
+
+# Set and query cells
+cmds.scriptTable(table, cellIndex=(1,1), edit=True, cellValue="MyValue")
+You run this and the last column does not stretch with the layout. Kind of annoying.
+
+Few minor tweaks:
+
+import maya.cmds as cmds
+import maya.OpenMayaUI as OpenMayaUI
+from shiboken import wrapInstance
+from PySide import QtGui
+
+def edit_cell(row, column, value):
+    return 1
+
+window = cmds.window(widthHeight=(400, 300))
+form = cmds.formLayout()
+table = cmds.scriptTable(rows=4, columns=2, label=[(1,"Column 1"), (2,"Column 2")], cellChangedCmd=edit_cell)
+
+addButton = cmds.button(label="Add Row",command="cmds.scriptTable(table, edit=True,insertRow=1)")
+deleteButton = cmds.button(label="Delete Row",command="cmds.scriptTable(table, edit=True,deleteRow=1)")
+
+cmds.formLayout(form, edit=True, attachForm=[(table, 'top', 0), (table, 'left', 0), (table, 'right', 0), (addButton, 'left', 0), (addButton, 'bottom', 0), (deleteButton, 'bottom', 0), (deleteButton, 'right', 0)], attachControl=(table, 'bottom', 0, addButton), attachNone=[(addButton, 'top'),(deleteButton, 'top')],  attachPosition=[(addButton, 'right', 0, 50), (deleteButton, 'left', 0, 50)] )
+
+cmds.scriptTable(table, cellIndex=(1,1), edit=True, cellValue="MyValue")
+
+# Find the maya control
+ptr = OpenMayaUI.MQtUtil.findControl(table)
+
+#Convert to a QTableWidget
+qtTable = wrapInstance(long(ptr), QtGui.QTableWidget)
+
+#Get the headers
+header = qtTable.horizontalHeader()
+
+#Make the last header stretch
+header.setStretchLastSection(True)
+
+cmds.showWindow( window )
