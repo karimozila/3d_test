@@ -1,0 +1,47 @@
+import maya.cmds as cmds
+
+#    Create a window with a couple float slider groups.  The first will
+#    use default limit values, and the second will set up a group that has
+#    a field range greater than the slider range.  Try entering values
+#    greater than the slider limits in both groups.
+#
+# please add keyfraem button
+'''
+references links
+https://sites.google.com/site/salimbeniwiki/home/3d/scripting/python/window-ui-_-gui?tmpl=%2Fsystem%2Fapp%2Ftemplates%2Fprint%2F&showPrintDialog=1
+https://sites.google.com/site/salimbeniwiki/home/3d/scripting/python/window-ui-_-gui#TOC-answer
+https://stackoverflow.com/questions/31341031/maya-ui-python-change-numberofcollums-dynamically
+
+
+
+'''
+# sphere fro test
+
+window = cmds.window(title='Anim Widget')
+sphereName = 'pSphere1'
+
+# rotate x
+label = 'Angle y'
+obj = sphereName
+attr = 'ry'
+    
+cmds.frameLayout( label='label x ', borderStyle='in', cll= False)
+def crt_slider_txt_cnctd_frame ( label , obj , attr):
+
+    cmds.rowColumnLayout(numberOfColumns=2)
+    # cmds.rowLayout()
+    # cmds.floatSliderGrp( 'angle_x' ,label='Angle x', field=True )
+
+    cmds.floatFieldGrp( '%s_%s_float'%(obj , attr), l='%s :'% label, numberOfFields=1 )
+    # index 1 would be the text label
+    cmds.connectControl( '%s_%s_float'%(obj , attr), '%s.%s' %(obj , attr), index=2 )
+    # slider 
+    cmds.intSlider( '%s_%s_slider'%(obj , attr) , min=-100, max=100, value=0, step=1 )
+    cmds.connectControl( '%s_%s_slider'%(obj , attr), '%s.%s' %(obj , attr) )
+
+crt_slider_txt_cnctd_frame ( label , obj , attr)
+crt_slider_txt_cnctd_frame ( 'asdasd' , obj , 'sz')
+crt_slider_txt_cnctd_frame ( 'zxcmzx' , obj , 'sy')
+# cmds.separator(style= "none", h= 3)
+# cmds.floatSliderGrp( label='Group 2', field=True, minValue=-10.0, maxValue=10.0, fieldMinValue=-100.0, fieldMaxValue=100.0, value=0 )
+cmds.showWindow( window )
