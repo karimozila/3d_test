@@ -1,0 +1,193 @@
+"""
+simple ui ( dockable ) with ( tabs ) and another some features which i use as a base to create my ui in maya
+## notice that all the code i collected from the internet and tweaked to fit my needs
+"""
+'''
+Template class for docking a Qt widget to maya 2017+.
+Author: Lior ben horin
+12-1-2017
+'''
+### we have proplem with resize down
+
+import weakref
+
+import maya.cmds as mc
+import maya.OpenMayaUI as omui
+from shiboken2 import wrapInstance
+
+from Qt import QtGui, QtWidgets, QtCore # https://github.com/mottosso/Qt.py by Marcus Ottosson 
+
+
+def dock_window(dialog_class):
+    try:
+        mc.deleteUI(dialog_class.CONTROL_NAME)
+        logger.info('removed workspace {}'.format(dialog_class.CONTROL_NAME))
+
+    except:
+        pass
+
+    # building the workspace control with maya.mc
+    main_control = mc.workspaceControl(dialog_class.CONTROL_NAME, ttc=["AttributeEditor", -1],iw=300, mw=True, wp='preferred', label = dialog_class.DOCK_LABEL_NAME)
+    
+    # now lets get a C++ pointer to it using OpenMaya
+    control_widget = omui.MQtUtil.findControl(dialog_class.CONTROL_NAME)
+    # conver the C++ pointer to Qt object we can use
+    control_wrap = wrapInstance(long(control_widget), QtWidgets.QWidget)
+    
+    # control_wrap is the widget of the docking window and now we can start working with it:
+    control_wrap.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+    win = dialog_class(control_wrap)
+    
+    # after maya is ready we should restore the window since it may not be visible
+    mc.evalDeferred(lambda *args: mc.workspaceControl(main_control, e=True, rs=True))
+
+    # will return the class of the dock content.
+    return win.run()
+
+
+class MyDockingUI(QtWidgets.QWidget):
+
+    instances = list()
+    CONTROL_NAME = 'km2_rig_system'
+    DOCK_LABEL_NAME = 'KM Rig System'
+
+    def __init__(self, parent=None):
+        MyDockingUI.delete_instances()
+        self.__class__.instances.append(weakref.proxy(self))
+
+        self.window_name = self.CONTROL_NAME
+        self.ui = parent
+        self.main_layout = parent.layout()
+        self.main_layout.setContentsMargins(2, 2, 2, 2)
+        
+        super(MyDockingUI, self).__init__(parent)
+        ##### start
+        ### create some widget
+
+        button = QtWidgets.QPushButton("Rig")
+        def print_ahmed():
+            module = 'km_print'
+            mymodule = __import__("kmRigSystem.utilites.%s"%(module), fromlist=['%s'%(module)])
+            reload(mymodule) 
+
+        button.clicked.connect(print_ahmed )
+        # button1 = QtWidgets.QPushButton("QPushButton")
+        # button2 = QtWidgets.QPushButton("QPushButton")
+        # button3 = QtWidgets.QPushButton("QPushButton")
+        textEdit = QtWidgets.QTextEdit()
+        
+        # side
+        self.side_group =QtWidgets.QGroupBox(self)
+        self.side_group.setTitle("Rig Side")
+        self.side_group.setStyleSheet('QGroupBox:title {subcontrol-origin: margin;subcontrol-position: top center;padding-left: 10px;padding-down: 2px;padding-right: 10px; }')
+        self.side_group_layout = QtWidgets.QHBoxLayout()
+        self.side_group.setLayout(self.side_group_layout)
+        self.side_b1 = QtWidgets.QRadioButton("left")
+        self.side_b2 = QtWidgets.QRadioButton("right")
+        self.side_b1.setChecked(True)
+        self.side_group_layout.addWidget(self.side_b1)
+        self.side_group_layout.addWidget(self.side_b2)
+        
+        # type
+        self.type_group =QtWidgets.QGroupBox(self)
+        self.type_group.setTitle("Rig type")
+        self.type_group.setStyleSheet('QGroupBox:title {subcontrol-origin: margin;subcontrol-position: top center;padding-left: 10px;padding-down: 2px;padding-right: 10px; }')
+        self.type_group_layout = QtWidgets.QHBoxLayout()
+        self.type_group.setLayout(self.type_group_layout)
+        self.type_b1 = QtWidgets.QRadioButton("arm")
+        self.type_b2 = QtWidgets.QRadioButton("spine")
+        self.type_b3 = QtWidgets.QRadioButton("leg")
+        self.type_b1.setChecked(True)
+        self.type_group_layout.addWidget(self.type_b1)
+        self.type_group_layout.addWidget(self.type_b2)
+        self.type_group_layout.addWidget(self.type_b3)
+
+        # features
+        self.features_group =QtWidgets.QGroupBox(self)
+        self.features_group.setTitle("Rig features")
+        self.features_group.setStyleSheet('QGroupBox:title {subcontrol-origin: margin;subcontrol-position: top center;padding-left: 10px;padding-down: 2px;padding-right: 10px; }')
+        self.features_group_layout = QtWidgets.QHBoxLayout()
+        self.features_group.setLayout(self.features_group_layout)
+        
+        self.features_area =QtWidgets.QScrollArea(self)
+        self.features_area.setWidgetResizable(True)
+        self.features_area_layout = QtWidgets.QGridLayout(self)
+        self.features_area.setLayout(self.features_area_layout)
+        self.features_group_layout.addWidget(self.features_area)
+        
+        self.features_b1 = QtWidgets.QCheckBox ("IKFK")
+        self.features_b2 = QtWidgets.QCheckBox ("stretchy")
+        self.features_b3 = QtWidgets.QCheckBox ("bendy")
+        self.features_b4 = QtWidgets.QCheckBox ("twist")
+        self.features_b5 = QtWidgets.QCheckBox ("sine")
+        self.features_b6 = QtWidgets.QCheckBox ("squashy")
+        self.features_b1.setChecked(True)
+        self.features_area_layout.addWidget(self.features_b1)
+        self.features_area_layout.addWidget(self.features_b2)
+        self.features_area_layout.addWidget(self.features_b3)
+        self.features_area_layout.addWidget(self.features_b4)
+        self.features_area_layout.addWidget(self.features_b5)
+        self.features_area_layout.addWidget(self.features_b6)
+
+        # ### ui widget
+        UI_widg = QtWidgets.QWidget()
+        UI_layout = QtWidgets.QVBoxLayout()
+        UI_layout.addWidget(self.side_group)
+        UI_layout.addWidget(self.type_group)
+        UI_layout.addWidget(self.features_group)
+        UI_layout.addWidget(button)
+        # UI_layout.addWidget(button1)
+        # UI_layout.addWidget(button2)
+        # UI_layout.addWidget(button3)
+        UI_widg.setLayout(UI_layout)
+        
+        # ### setting widget
+        setting_widg = QtWidgets.QWidget()
+        setting_layout = QtWidgets.QHBoxLayout()
+        setting_layout.addWidget(textEdit)
+        setting_widg.setLayout(setting_layout)
+        
+        # ### add tabs
+        tab = QtWidgets.QTabWidget()
+        tab.addTab(UI_widg, "UI")
+        tab.addTab(setting_widg, "settings")
+        
+        # ### headers
+        self.headerTitle = QtWidgets.QLabel("Let's create some Rigs 😉")         
+        self.headerTitle.setStyleSheet("color: black;background-color: grey;")
+        self.headerTitle.setFixedSize(300,30)
+        
+        # ### ends
+        self.endTitle = QtWidgets.QLabel("Good Luck")         
+        
+        # UI_widg.setLayout(window_layout)
+        ### window_widg
+        window_widg = QtWidgets.QWidget()
+        window_layout = QtWidgets.QVBoxLayout()
+        window_layout.addWidget(self.headerTitle) 
+        window_layout.addWidget(tab) 
+        window_layout.addWidget(self.endTitle) 
+        window_widg.setLayout(window_layout)
+        ## final layout
+        self.main_layout.addWidget(window_widg) 
+
+        # self.setLayout(parent_layout)
+    @staticmethod
+    def delete_instances():
+        for ins in MyDockingUI.instances:
+            logger.info('Delete {}'.format(ins))
+            try:
+                ins.setParent(None)
+                ins.deleteLater()
+            except:
+                # ignore the fact that the actual parent has already been deleted by Maya...
+                pass
+
+            MyDockingUI.instances.remove(ins)
+            del ins
+
+    def run(self):
+        return self
+
+# this is where we call the window
+my_dock = dock_window(MyDockingUI)
