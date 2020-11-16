@@ -18,3 +18,19 @@ aov_write_rgba
  aov_name "id_jitter"
  blend_opacity off
 }
+
+}
+
+aov_write_rgba
+{
+ name aiWriteRgba1
+ aov_input aiUtility1
+ aov_name "id_jitter"
+ blend_opacity off
+}
+
+utility
+{
+ name aiUtility1
+ color_mode "prims"
+}
