@@ -1,0 +1,10 @@
+}
+
+aov_write_rgba
+{
+ name aiWriteRgba1
+ passthrough aiNoise1
+ aov_input aiColorJitter1
+ aov_name "id_jitter"
+ blend_opacity off
+}
