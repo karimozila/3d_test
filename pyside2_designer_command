@@ -1,0 +1,4 @@
+## finally i did that little thing
+## i stopped writing UI by myself and going lazy to use designer
+C:/Python27/Lib/site-packages/PySide/designer.exe
+C:\Users\Windows\AppData\Local\Programs\Python\Python37\Lib\site-packages\PySide2\uic.exe C:\Users\Windows\Documents\untitled.ui > C:\Users\Windows\Documents\untitled.py -g python
