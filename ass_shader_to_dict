@@ -1,0 +1,12 @@
+ass_file = "/Users/win/Documents/scripts/shader.ass"
+with open ( ass_file , "r") as f :
+    file_txt = f.read()
+nodes = file_txt.split("\n\n")
+nodes_ls = []
+for node in nodes :
+    temp_dict = {}
+    for line in node.split("\n") :
+        print line
+        _ , attr , value = line.split(" ")
+        temp_dict [attr] = value
+    nodes_ls.append(temp_dict)
