@@ -1,12 +1,16 @@
 ass_file = "/Users/win/Documents/scripts/shader.ass"
 with open ( ass_file , "r") as f :
     file_txt = f.read()
-nodes = file_txt.split("\n\n")
 nodes_ls = []
-for node in nodes :
-    temp_dict = {}
-    for line in node.split("\n") :
-        print line
-        _ , attr , value = line.split(" ")
-        temp_dict [attr] = value
+import re
+pat = re.compile("\n(\w+)\n\{([\W(\w)]+?)\}")
+data_pat = re.compile("\n (\w+) (.+)")
+result = pat.finditer(file_txt)
+for m in result :
+    node_id =  m.group(1)
+    node_data =  m.group(2)
+    temp_dict = {"id": m.group(1)}
+    node_result = data_pat.finditer(node_data)
+    for n in node_result :
+        temp_dict [n.group(1)] = n.group(2)
     nodes_ls.append(temp_dict)
